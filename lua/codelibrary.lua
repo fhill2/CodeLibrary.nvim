@@ -36,6 +36,7 @@ local repos = { 'https://github.com/fhill2/floating.nvim', 'https://github.com/f
       capture_output = {
   stdout = jobs.logging_callback(output.err.stdout, output.data.stdout),
       stderr = jobs.logging_callback(output.err.stderr, output.data.stderr, nil, repo)
+
       },
       timeout = 60,
      options = getenv()
@@ -70,76 +71,84 @@ end
 --local cmd = string.format('git clone %s %s', repo, config.install_dir)
 
 
-local spawn = a.wrap(function(repo, installer_opts)
-  local stdout = vim.loop.new_pipe(false)
-  local stderr = vim.loop.new_pipe(false)
+-- local spawn = a.wrap(function(cmd, args, installer_opts)
+--   local stdout = vim.loop.new_pipe(false)
+--   local stderr = vim.loop.new_pipe(false)
 
 
 
-  -- local function setQF()
-  --   lo('setQF trig')
-  --   lo(results)
-  --   vim.fn.setqflist({}, 'r', {title = 'Search Results', lines = results})
-  --   vim.api.nvim_command('cwindow')
-  --   local count = #results
-  --   for i=0, count do results[i]=nil end -- clear the table for the next search
-  -- end
+--   -- local function setQF()
+--   --   lo('setQF trig')
+--   --   lo(results)
+--   --   vim.fn.setqflist({}, 'r', {title = 'Search Results', lines = results})
+--   --   vim.api.nvim_command('cwindow')
+--   --   local count = #results
+--   --   for i=0, count do results[i]=nil end -- clear the table for the next search
+--   -- end
 
-local dest = string.format('%s/%s', config.install_dir, math.random(0,55000))
-local args = { 'clone', repo, dest}
---lo(args)
+-- --local dest = string.format('%s/%s', config.install_dir, math.random(0,55000))
+-- --local args = { 'clone', repo, dest}
+-- --lo(args)
+-- lo(cmd)
+-- lo(args)
 
-  handle, pid = vim.loop.spawn('git',
-  {
-    args = args,
-    stdio = {nil,stdout,stderr }
-  }, function()
-    lo(pid)
-    lo('on exit trig!!')
-    lo(results)
-    lo(handle)
-    stdout:read_stop()
-    stderr:read_stop()
-    stdout:close()
-    stderr:close()
---  setQF()
-if not handle:is_closing() then handle:close() end
-    end)
---lo('handle is: ')
---lo(handle)
-  vim.loop.read_start(stdout, onread)
-  vim.loop.read_start(stderr, onread)
-end)
+--   handle, pid = vim.loop.spawn('git',
+--   {
+--     args = args,
+--     stdio = {nil,stdout,stderr }
+--   }, function()
+--     -- lo(pid)
+--     -- lo('on exit trig!!')
+--     -- lo(results)
+--     -- lo(handle)
+--     stdout:read_stop()
+--     stderr:read_stop()
+--     stdout:close()
+--     stderr:close()
+-- --  setQF()
+-- if not handle:is_closing() then handle:close() end
+--     end)
+-- --lo('handle is: ')
+-- --lo(handle)
+--   vim.loop.read_start(stdout, onread)
+--   vim.loop.read_start(stderr, onread)
+-- end)
 
 
 
 
 
-local function install_plugin(repo)
+local function install_plugin(repo, display_win, results)
 
 
 return async(function()
---display_win:task_start(repo, 'installing...')
+--local dest = string.format('%s/%s', config.install_dir, math.random(0,55000))
 local dest = string.format('%s/%s', config.install_dir, math.random(0,55000))
 
-local cmd = string.format('%s %s %s', 'git clone', repo, dest)
+--local cmd = 'git'
+local cmd = string.format('%s %s %s', 'git clone', repo.url, dest)
 
-
+lo(cmd)
 local r = await(jobs.run(cmd, installer_opts))
 lo('output of r is: ')
 lo(r)
+lo(results)
+lo(output)
+if r.ok then 
+display_win:update_task_success(repo)
+end
  --local exit_code = await(spawn(repo, installer_opts))
 
- lo('exit code is: ')
-lo(exit_code)
-lo(output)
+--  lo('exit code is: ')
+-- lo(exit_code)
+-- lo(output)
 end)
 end
 
 
 
 
-local function do_install(all_repos, missing_repos, results)
+local function do_install(results)
   -- init everything
   results = results or {}
 --  results.installs = results.installs or {}
@@ -147,12 +156,20 @@ local function do_install(all_repos, missing_repos, results)
   local display_win = nil
   local tasks = {}
 
+-- find missing
+local missing_repos = {}
+for i, repo in ipairs(all_repos) do
+  if repo.exists == false then table.insert(missing_repos, i) end
+end
+lo(missing_repos)
+
 if #missing_repos > 0 then
 display_win = display.open()
+display_win:redraw_init()
 
 
-for k, repo in ipairs(missing_repos) do
-table.insert(tasks, install_plugin(all_repos[repo], display_win, results))
+for _, repo_i in ipairs(missing_repos) do
+table.insert(tasks, install_plugin(all_repos[repo_i], display_win, results))
 end
 end
 return tasks, display_win
@@ -169,24 +186,25 @@ end
 
 
 codelibrary.install = function()
-display.open()
 
 
 return async(function()
   lo('=================== NEW RUN ==================')
   
 local results = {}
-local missing_repos = prepare.find_missing_repos
-local tasks, display_win = do_install(all_repos, missing_repos, results)
+prepare.create_missing_dirs()
+prepare.scan_fs()
+prepare.update_missing_repos()
+local tasks, display_win = do_install(results)
 
 --   local start_time = vim.fn.reltime()
 
+lo(tasks)
 
+lo('before await all')
 
--- lo('before await all')
-
--- a.wait(unpack(tasks))
--- lo('after await all')
+a.wait(unpack(tasks))
+lo('after await all')
 
 
 
@@ -197,7 +215,7 @@ end
 
 
 codelibrary.checkoutput = function()
-lo('checkoutput ran')
+lo('==================  checkoutput  =========')
   lo(output)
   lo(results)
 end

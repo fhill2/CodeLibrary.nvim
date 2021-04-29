@@ -71,11 +71,10 @@ prepare.scan_fs = function()
     return all_fs
 end
 
-prepare.find_missing_repos = function()
-lo('==== NEW RUN =====')
-prepare.scan_fs()
+prepare.update_missing_repos = function()
+--prepare.scan_fs()
 
-local missing_plugins = {}
+local missing_repos = {}
 
 -- repo.exists = true if repo already found in filesystem
 for _,repo in ipairs(all_repos) do
@@ -84,15 +83,21 @@ for _,repo in ipairs(all_repos) do
   end
 end
 
-for _, repo in ipairs(all_repos) do
-if not repo.exists then table.insert(missing_plugins, repo) end
+-- for _, repo in ipairs(all_repos) do
+-- if not repo.exists then table.insert(missing_repos, repo) end
+-- end
+
+--return missing_repos
 end
 
-end
+
+
+
+
 
 prepare.create_missing_dirs = function()
-
 local dirs = dirs_to_create
+--lo(dirs_to_create)
     --  TARGET: filesystem, creates folders based on repo table if they dont exist
     local source_stats = uv.fs_stat(install_dir, nil)
     for i, relpath in ipairs(dirs_to_create) do
@@ -110,10 +115,9 @@ end
 
 prepare.all = function()
     lo('======= NEW RUN ========')
-
-    -- prepare.create_missing_dirs()
-    prepare.scan_fs()
-
+     prepare.scan_fs()
+    prepare.create_missing_dirs()
+   
 end
 
 return prepare
