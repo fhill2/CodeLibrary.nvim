@@ -38,30 +38,26 @@ local function create_dirs(root)
 local function startup()
 
     local function dl(root, repos)
-all_repos[root] = {}
         
        table.insert(all_roots, root)
           create_dirs(root)
 
         if type(repos) == 'string' then
           local name = utils.normalize_url(repos)
-          all_repos[root][name] = {}
-            all_repos[root][name] = {root = root, name = name, mode = 'clone', exists = false}
+                 table.insert(all_repos, {root = root, name = name, mode = 'clone', exists = false})
         elseif type(repos) == 'table' then
           
             for _, repo in pairs(repos) do
                 if type(repo) == 'string' then
                    local name = utils.normalize_url(repo)
-                  all_repos[root][name] = {}
-                    all_repos[root][name] = { root = root, name = name, mode = 'clone', exists = false}
+                                  table.insert(all_repos, { root = root, name = name, mode = 'clone', exists = false})
                 else
                   local name = utils.normalize_url(repo[1])
                   repo.name = name
                   repo.root = root
                   repo.exists = false
                   repo[1] = nil
-                    all_repos[root][name] = {}
-                    all_repos[root][name] = repo
+                               table.insert(all_repos, repo)
                 end
             end
         end

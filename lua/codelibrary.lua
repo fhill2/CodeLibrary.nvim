@@ -10,6 +10,8 @@ local prepare = require'codelibrary/prepare'
 local display = require'codelibrary/display'
 local codelibrary = {}
 
+local all_repos = require'codelibrary/repos'.repos
+local all_roots = require'codelibrary/repos'.all_roots
 
 
 
@@ -137,23 +139,23 @@ end
 
 
 
-local function do_install(repos)
+local function do_install(all_repos, missing_repos, results)
   -- init everything
   results = results or {}
-  results.installs = results.installs or {}
-  results.plugins = results.plugins or {}
+--  results.installs = results.installs or {}
+--  results.plugins = results.plugins or {}
   local display_win = nil
   local tasks = {}
 
+if #missing_repos > 0 then
+display_win = display.open()
 
---display_win = display.open(config.display.open_fn or config.display.open_cmd)
 
-
-for k, repo in ipairs(repos) do
-table.insert(tasks, install_plugin(repo))
+for k, repo in ipairs(missing_repos) do
+table.insert(tasks, install_plugin(all_repos[repo], display_win, results))
 end
-lo(tasks)
-return tasks
+end
+return tasks, display_win
 end
 
 
@@ -167,24 +169,24 @@ end
 
 
 codelibrary.install = function()
+display.open()
 
 
 return async(function()
   lo('=================== NEW RUN ==================')
-  local start_time = vim.fn.reltime()
-  local results = {}
+  
+local results = {}
+local missing_repos = prepare.find_missing_repos
+local tasks, display_win = do_install(all_repos, missing_repos, results)
+
+--   local start_time = vim.fn.reltime()
 
 
-prepare.all()
 
-local tasks = do_install(repos)
+-- lo('before await all')
 
-
-
-lo('before await all')
-
-a.wait(unpack(tasks))
-lo('after await all')
+-- a.wait(unpack(tasks))
+-- lo('after await all')
 
 
 
@@ -199,27 +201,6 @@ lo('checkoutput ran')
   lo(output)
   lo(results)
 end
-
-
-
-
-codelibrary.startup = function()
-
-
-end
-
-
-codelibrary.open_display = function()
-
-
-local all_fs = prepare.scan_fs()
-lo(all_fs)
-for _,task in ipairs(all_fs) do
-lo(task)
-end
-
-end
-
 
 
 return codelibrary

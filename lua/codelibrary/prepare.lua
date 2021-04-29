@@ -27,6 +27,7 @@ local install_dir = '/home/f1/install2' -- config.install_dir
 
 -- TARGET: scan current fs state into table (then table can be rendered to ui)
 prepare.scan_fs = function()
+  all_fs = {}
     -- lo('======= NEW RUN ========')
 
 
@@ -52,9 +53,10 @@ prepare.scan_fs = function()
                    --   local utils = 'codelibrary/utils'
 
                       local repo_name = utils.normalize_url(result)
-                      single_scan_result[repo_name] = {
-                        exists = true
-                      }
+                      table.insert(all_fs, {
+                        name = repo_name,
+                        root = root
+                      })
 
                     end
                     return
@@ -63,8 +65,9 @@ prepare.scan_fs = function()
 
         end -- end assert loop
 
-        all_fs[root] = single_scan_result
+      --  table.insert(all_fs, single_scan_result)
     end -- end FOR LOOP
+  --  dump(all_fs)
     return all_fs
 end
 
@@ -72,36 +75,18 @@ prepare.find_missing_repos = function()
 lo('==== NEW RUN =====')
 prepare.scan_fs()
 
-
 local missing_plugins = {}
 
-for _, root in pairs(all_repos) do
-for _, repo in pairs(root) do
-vim.tbl_map(function()
-if all_fs[repo.root] == nil then 
-  missing_plugins[repo.root] = {}
-  missing_plugins[repo.root][repo.name] = repo 
-  return end
-
-
-if all_fs[repo.root][repo.name] == nil then 
-  missing_plugins[repo.root] = {}
-  missing_plugins[repo.root][repo.name] = repo 
-  return end
-
-lo('DIDNT ADD:')
-lo(repo)
-repo.exists = true
---table.insert(missing_plugins,repo)
-return
-end, root)
+-- repo.exists = true if repo already found in filesystem
+for _,repo in ipairs(all_repos) do
+  for _, fs in ipairs(all_fs) do
+      if repo.name == fs.name and repo.root == fs.root then repo.exists = true end
+  end
 end
 
+for _, repo in ipairs(all_repos) do
+if not repo.exists then table.insert(missing_plugins, repo) end
 end
-
-lo(missing_plugins)
-return missing_plugins
-
 
 end
 
@@ -136,6 +121,32 @@ return prepare
 ---- old
 
 
+
+-- OLD FIND MISSING REPOS
+-- local missing_plugins = {}
+
+-- for _, root in pairs(all_repos) do
+-- for _, repo in pairs(root) do
+-- vim.tbl_map(function()
+-- if all_fs[repo.root] == nil then 
+--   missing_plugins[repo.root] = {}
+--   missing_plugins[repo.root][repo.name] = repo 
+--   return end
+
+
+-- if all_fs[repo.root][repo.name] == nil then 
+--   missing_plugins[repo.root] = {}
+--   missing_plugins[repo.root][repo.name] = repo 
+--   return end
+
+-- lo('DIDNT ADD:')
+-- lo(repo)
+-- repo.exists = true
+-- --table.insert(missing_plugins,repo)
+-- return
+-- end, root)
+-- end
+---- END OLD FIND MISSING REPOS
 
 
 -- TARGET: repo config table
