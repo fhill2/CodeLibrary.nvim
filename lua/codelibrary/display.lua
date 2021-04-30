@@ -57,7 +57,7 @@ vim.api.nvim_buf_set_lines(self.buf, 0, -1, true, {''})
     --  lo(vim.api.nvim_buf_get_extmarks(self.buf, self.ns, 0, -1, {}))
 -- render all repos
 line=0
-    for _, repo in ipairs(data.all_repos) do
+    for _, repo in ipairs(all_repos) do
  
 if repo.exists then 
 self.marks[repo.root][repo.name] = line
@@ -77,11 +77,14 @@ line=line+1
 
   -- --- Update the status message of a task in progress
   update_task_success = vim.schedule_wrap(function(self, repo)
---     local repo = data.all_repos[1]
 
-   local line = self.marks[repo.root][repo.name]
-      vim.api.nvim_buf_set_lines(self.buf, line, line, true, { string.format('%s: %s ... CLONED', repo.root, repo.name)} )
-vim.api.nvim_buf_add_highlight(self.buf, self.ns, 'clSuccess', line, 0, -1)
+--lo('update task success trig')
+  -- local line = self.marks[repo.root][repo.name]
+ --  lo('repo.name is: ')
+ --  lo(repo.name)
+ --  lo(line)
+     vim.api.nvim_buf_set_lines(self.buf, 0, 0, true, { string.format('%s: %s ... CLONED', repo.root, repo.name)} )
+vim.api.nvim_buf_add_highlight(self.buf, self.ns, 'clSuccess', 0, 0, -1)
 
   end),
 
@@ -123,6 +126,11 @@ end
     }
     for _, c in ipairs(highlights) do vim.cmd(c) end
 
+
+-- duplicated from redraw_init
+disp.ns = vim.api.nvim_create_namespace('')
+vim.api.nvim_buf_clear_namespace(disp.buf, disp.ns, 0, -1)
+vim.api.nvim_buf_set_lines(disp.buf, 0, -1, true, {''})
 
 
 

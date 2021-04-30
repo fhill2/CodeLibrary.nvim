@@ -64,10 +64,10 @@ local function startup()
         end
     end
 
-    -- dl('lua', {
-    -- 'https://github.com/kyazdani42/nvim-tree.lua',
-    -- 'https://github.com/glepnir/galaxyline.nvim',
-    -- })
+    dl('lua', {
+    'https://github.com/kyazdani42/nvim-tree.lua',
+    'https://github.com/glepnir/galaxyline.nvim',
+    })
 
     dl('lua/telescope', 'https://github.com/nvim-telescope/telescope.nvim')
 

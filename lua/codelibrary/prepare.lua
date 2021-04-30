@@ -22,18 +22,18 @@ dirs_k_to_v()
 
   local all_fs = {}
 
-local install_dir = '/home/f1/install2' -- config.install_dir
+--local install_dir = '/home/f1/install2' -- config.install_dir
 
 
 -- TARGET: scan current fs state into table (then table can be rendered to ui)
 prepare.scan_fs = function()
   all_fs = {}
-    -- lo('======= NEW RUN ========')
-
+ 
 
     for _, root in ipairs(all_roots) do
         local single_scan_result = {}
-        local filepath = install_dir .. '/' .. root
+
+             local filepath = config.install_dir .. '/' .. root
         --  lo('=== NEW SCAN ===' .. filepath)
         -- lo(filepath)
         -- check if exists first
@@ -77,11 +77,15 @@ prepare.update_missing_repos = function()
 local missing_repos = {}
 
 -- repo.exists = true if repo already found in filesystem
+
 for _,repo in ipairs(all_repos) do
   for _, fs in ipairs(all_fs) do
       if repo.name == fs.name and repo.root == fs.root then repo.exists = true end
   end
 end
+lo(all_repos)
+lo(all_fs)
+
 
 -- for _, repo in ipairs(all_repos) do
 -- if not repo.exists then table.insert(missing_repos, repo) end
@@ -99,7 +103,7 @@ prepare.create_missing_dirs = function()
 local dirs = dirs_to_create
 --lo(dirs_to_create)
     --  TARGET: filesystem, creates folders based on repo table if they dont exist
-    local source_stats = uv.fs_stat(install_dir, nil)
+    local source_stats = uv.fs_stat(config.install_dir, nil)
     for i, relpath in ipairs(dirs_to_create) do
         local filepath = string.format('%s/%s', install_dir, relpath)
 

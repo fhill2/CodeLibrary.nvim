@@ -123,20 +123,21 @@ local function install_plugin(repo, display_win, results)
 
 return async(function()
 --local dest = string.format('%s/%s', config.install_dir, math.random(0,55000))
-local dest = string.format('%s/%s', config.install_dir, math.random(0,55000))
+local dest = string.format('%s/%s/%s', config.install_dir, repo.root, repo.name)
 
 --local cmd = 'git'
 local cmd = string.format('%s %s %s', 'git clone', repo.url, dest)
-
-lo(cmd)
+--lo(cmd)
+--lo(cmd)
 local r = await(jobs.run(cmd, installer_opts))
-lo('output of r is: ')
-lo(r)
-lo(results)
-lo(output)
-if r.ok then 
+--lo('AFTER JOBS RUN')
+--lo('output of r is: ')
+--lo(r)
+--lo(results)
+--lo(output)
+
 display_win:update_task_success(repo)
-end
+--end
  --local exit_code = await(spawn(repo, installer_opts))
 
 --  lo('exit code is: ')
@@ -165,12 +166,12 @@ lo(missing_repos)
 
 if #missing_repos > 0 then
 display_win = display.open()
-display_win:redraw_init()
-
-
+--display_win:redraw_init()
 for _, repo_i in ipairs(missing_repos) do
-table.insert(tasks, install_plugin(all_repos[repo_i], display_win, results))
+table.insert(tasks, install_plugin(all_repos[repo_i], display_win, results)) 
 end
+else
+  print('all up to date!') 
 end
 return tasks, display_win
 end
@@ -199,12 +200,14 @@ local tasks, display_win = do_install(results)
 
 --   local start_time = vim.fn.reltime()
 
-lo(tasks)
+--lo(tasks)
 
-lo('before await all')
-
-a.wait(unpack(tasks))
-lo('after await all')
+--lo('before await all')
+-- for k,v in pairs(tasks) do
+-- v()
+-- end
+a.wait_all(unpack(tasks))
+--lo('after await all')
 
 
 
@@ -216,8 +219,11 @@ end
 
 codelibrary.checkoutput = function()
 lo('==================  checkoutput  =========')
-  lo(output)
-  lo(results)
+ -- lo(output)
+
+
+ -- lo(results)
+  lo(vim.api.nvim_list_chans())
 end
 
 

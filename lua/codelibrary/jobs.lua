@@ -4,6 +4,8 @@ local loop = vim.loop
 local a = require('packer.async')
 local log = require('packer.log')
 local result = require('packer.result')
+local async = a.sync
+local await = a.wait
 
 --- Utility function to make a "standard" logging callback for a given set of tables
 -- Arguments:
@@ -43,22 +45,20 @@ end
 --- Wrapper for vim.loop.spawn. Takes a command, options, and callback just like vim.loop.spawn, but
 --  (1) makes an async function and (2) ensures that all output from the command has been flushed
 --  before calling the callback
-local spawn = a.wrap(function(cmd, options, callback)
- -- lo('spawn trig')
+--lo('spawn executed')
+local spawn = function(cmd, options, callback)
+ return async(function()
   local handle = nil
   local timer = nil
  -- lo(options)
   handle, pid = loop.spawn(cmd, options, function(exit_code, signal)
- lo('before handle')
- lo(handle)
- lo(pid)
  handle:close()
     if timer ~= nil then
       timer:stop()
       timer:close()
     end
-   lo(handle:is_closing())
-   loop.close(options.stdio[1])
+ --  lo(handle:is_closing())
+  if not loop.is_closing(handle) then loop.close(options.stdio[1]) end
     local check = loop.new_check()
     loop.check_start(check, function()
       for _, pipe in pairs(options.stdio) do if not loop.is_closing(pipe) then return end end
@@ -91,6 +91,7 @@ local spawn = a.wrap(function(cmd, options, callback)
     end)
   end
 end)
+end
 
 --- Utility function to perform a common check for process success and return a result object
 local function was_successful(r)
@@ -112,11 +113,9 @@ end
 --    "capture_output" (either a boolean, in which case default output capture is set up and the
 --    resulting tables are included in the result, or a set of tables, in which case output is logged
 --    to the given tables)
+
 local run_job = function(task, opts)
   return a.sync(function()
-  --  lo('async job ran!!')
-   -- lo(task)
-   -- lo(opts)
     local options = opts.options or {hide = true}
     local stdout = nil
     local stderr = nil
@@ -130,13 +129,13 @@ local run_job = function(task, opts)
       if type(opts.capture_output) == 'boolean' then
         stdout, uv_err = loop.new_pipe(false)
         if uv_err then
-          log.error('Failed to open stdout pipe: ' .. uv_err)
+          lo('Failed to open stdout pipe: ' .. uv_err)
           return result.err()
         end
 
         stderr, uv_err = loop.new_pipe(false)
         if uv_err then
-          log.error('Failed to open stderr pipe: ' .. uv_err)
+          lo('Failed to open stderr pipe: ' .. uv_err)
           return job_result
         end
 
@@ -147,7 +146,7 @@ local run_job = function(task, opts)
         if opts.capture_output.stdout then
           stdout, uv_err = loop.new_pipe(false)
           if uv_err then
-            log.error('Failed to open stdout pipe: ' .. uv_err)
+            lo('Failed to open stdout pipe: ' .. uv_err)
             return job_result
           end
 
@@ -163,7 +162,7 @@ local run_job = function(task, opts)
         if opts.capture_output.stderr then
           stderr, uv_err = loop.new_pipe(false)
           if uv_err then
-            log.error('Failed to open stderr pipe: ' .. uv_err)
+            lo('Failed to open stderr pipe: ' .. uv_err)
             return job_result
           end
 
@@ -195,11 +194,13 @@ local run_job = function(task, opts)
     options.stdio_callbacks = {nil, callbacks.stdout, callbacks.stderr}
 
     local exit_code, signal = a.wait(spawn(cmd, options))
+  --  lo(exit_code)
+  --  lo(signal)
     job_result = {exit_code = exit_code, signal = signal}
     if output_valid then job_result.output = output end
-    lo('got to return')
-    lo(job_result)
-    return success_test(job_result)
+ --   lo('got to return')
+  --  lo(job_result)
+   return success_test(job_result)
   end)
 end
 

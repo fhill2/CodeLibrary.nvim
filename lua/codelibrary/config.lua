@@ -14,7 +14,7 @@ local config = {
     show_all_info = true,
     keybindings = {quit = 'q', toggle_info = '<CR>', diff = 'd', prompt_revert = 'r'}
   },
-  install_dir = '/home/f1/install/test'
+  install_dir = '/home/f1/code-library/cl'
 }
 
 
