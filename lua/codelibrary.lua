@@ -1,4 +1,4 @@
-local a = require('packer.async')
+local a = require('codelibrary.async')
 local async = a.sync
 local await = a.wait
 local jobs = require'codelibrary.jobs'
@@ -122,6 +122,7 @@ local function install_plugin(repo, display_win, results)
 
 
 return async(function()
+
 --local dest = string.format('%s/%s', config.install_dir, math.random(0,55000))
 local dest = string.format('%s/%s/%s', config.install_dir, repo.root, repo.name)
 

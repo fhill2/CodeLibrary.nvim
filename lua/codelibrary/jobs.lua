@@ -1,9 +1,9 @@
 -- Interface with Neovim job control and provide a simple job sequencing structure
 local split = vim.split
 local loop = vim.loop
-local a = require('packer.async')
-local log = require('packer.log')
-local result = require('packer.result')
+local a = require('codelibrary.async')
+--local log = require('packer.log')
+local result = require('codelibrary.result')
 local async = a.sync
 local await = a.wait
 
@@ -80,7 +80,7 @@ local spawn = function(cmd, options, callback)
       timer:close()
     --  lo(handle)
       if loop.is_active(handle) then
-        log.warn('Killing ' .. cmd .. ' due to timeout!')
+       -- log.warn('Killing ' .. cmd .. ' due to timeout!')
         loop.process_kill(handle, 'sigint')
         handle:close()
         for _, pipe in pairs(options.stdio) do
